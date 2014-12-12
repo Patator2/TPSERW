@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment> All the parameters of the application</comment>
+	<entry key="version">v2</entry> <!-- the version used to operate the protocol -->
+	<!-- the law to determine the number of readers involve in the simulation -->
+	<entry key="nbAverageReaders">5</entry>
+	<entry key="nbDeviationReaders">0</entry>
+	<!-- the law to determine the number of writers involve in the simulation -->
+	<entry key="nbAverageWriters">2</entry>
+	<entry key="nbDeviationWriters">0</entry>
+	<!-- the law to determine the number of resources involve in the simulation -->
+	<entry key="nbAverageResources">1</entry>
+	<entry key="nbDeviationResources">0</entry>
+	<!-- the law to determine the number of resources used by an actor -->
+	<entry key="nbAverageSelection">1</entry>
+	<entry key="nbDeviationSelection">0</entry>
+	<!-- the law to determine the using delay for readers -->
+	<entry key="readerAverageUsingTime">900</entry>
+	<entry key="readerDeviationUsingTime">300</entry>
+	<!-- the law to determine the vacation delay for readers -->
+	<entry key="readerAverageVacationTime">1700</entry>
+	<entry key="readerDeviationVacationTime">900</entry>
+	<!-- the law to determine the using delay for writers -->
+	<entry key="writerAverageUsingTime">1000</entry>
+	<entry key="writerDeviationUsingTime">350</entry>
+	<!-- the law to determine the vacation delay for writers -->
+	<entry key="writerAverageVacationTime">1400</entry>
+	<entry key="writerDeviationVacationTime">900</entry>
+	<!-- the law to determine the number of access a writers does -->
+	<entry key="writerAverageIteration">20</entry>
+	<entry key="writerDeviationIteration">2</entry>
+	<!-- add this entry for the version v3 to fix the policy <entry key="policy">LOW_WRITE</entry> -->
+</properties>
