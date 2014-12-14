@@ -2,7 +2,7 @@
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
 	<comment> All the parameters of the application</comment>
-	<entry key="version">v2</entry> <!-- the version used to operate the protocol -->
+	<entry key="version">v3</entry> <!-- the version used to operate the protocol -->
 	<!-- the law to determine the number of readers involve in the simulation -->
 	<entry key="nbAverageReaders">5</entry>
 	<entry key="nbDeviationReaders">0</entry>
@@ -30,5 +30,6 @@
 	<!-- the law to determine the number of access a writers does -->
 	<entry key="writerAverageIteration">20</entry>
 	<entry key="writerDeviationIteration">2</entry>
-	<!-- add this entry for the version v3 to fix the policy <entry key="policy">LOW_WRITE</entry> -->
+	<!-- add this entry for the version v3 to fix the policy <entry key="policy">XXX_WRITE</entry> -->
+	<entry key="policy">LOW_WRITE</entry>
 </properties>

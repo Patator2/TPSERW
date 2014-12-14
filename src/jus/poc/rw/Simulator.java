@@ -86,6 +86,14 @@ public class Simulator{
 		policy = option.getProperty("policy");
 	}
 	
+	/**
+	 * Renvoie le String associe a la police
+	 * Il n'est pas necessaire de renvoyer un nouveau string base sur policy, comme il est static, il n'y a pas de risques de le modifier ailleurs 
+	 */
+	public static String getPolicy(){
+		return policy;
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static void main(String... args) throws Exception{
 		// set the application parameters
@@ -99,7 +107,7 @@ public class Simulator{
 	
 		int i;
 		
-		if (version.compareTo("v1")==0 || version.compareTo("v2")==0) {
+		if (version.compareTo("v1")==0 || version.compareTo("v2")==0 || version.compareTo("v3")==0) {
 			// création du pool de ressources de v1
 			rp = new ResourcePool(nbResources, null, obs, "jus.poc.rw."+version+".Resource"+version);		
 		}
@@ -137,8 +145,9 @@ public class Simulator{
 		
 		/**
 		 * Simulation v1, fin lorsque les redacteurs s'arretent d'ecrire
+		 * Simulation v3, cas similaire a v1, on peut placer LOW_WRITE ou HIGH_WRITE dans le fichier xml en fonction de la politique voulue
 		 */
-		if (version.compareTo("v1")==0) {
+		if (version.compareTo("v1")==0 || version.compareTo("v3")==0) {
 			// Boucle tant que les redacteurs n'ont pas fini
 			int nbRedFini=0;
 			while (nbRedFini != nbWriters) {

@@ -9,11 +9,11 @@ import jus.poc.rw.deadlock.IDetector;
 
 public class Resourcev2 extends Resource {
 		// Nombre de lecteurs en cours
-		protected int nbR;
+		protected int nbR=0;
 		// Nombre de redacteurs en cours
-		protected int nbW;
+		protected int nbW=0;
 		// Nombre de lectures a realiser avant une nouvelle ecriture sur la ressource
-		protected int nbLect; 
+		protected int nbLect=0; 
 
 		/**
 		 * Constructor
@@ -22,9 +22,6 @@ public class Resourcev2 extends Resource {
 		 */
 		public Resourcev2(IDetector act, IObservator obs) {
 			super(act, obs);
-			nbR = 0;
-			nbW = 0;
-			nbLect = 0;
 		}
 
 		/**
