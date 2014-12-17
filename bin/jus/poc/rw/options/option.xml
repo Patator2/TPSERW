@@ -2,7 +2,7 @@
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
 	<comment> All the parameters of the application</comment>
-	<entry key="version">v4</entry> <!-- the version used to operate the protocol -->
+	<entry key="version">v1</entry> <!-- the version used to operate the protocol -->
 	<!-- the law to determine the number of readers involve in the simulation -->
 	<entry key="nbAverageReaders">1</entry>
 	<entry key="nbDeviationReaders">0</entry>
