@@ -77,12 +77,15 @@ public abstract class Actor extends Thread{
 		for(i=0;i<resources.length;i++){
 			try {
 				this.acquire(resources[i]);
+				if (Simulator.getVersion().compareTo("v4")==0) {
+					sleep(2000);
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			catch (DeadLockException e) {
-				e.printStackTrace();
-			}
+					restart(resources[i]);
+			} 
 		}
 	}
 	/**

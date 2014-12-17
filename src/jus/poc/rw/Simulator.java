@@ -1,7 +1,8 @@
 package jus.poc.rw;
 
 import jus.poc.rw.control.Observator;
-import jus.poc.rw.v2.Resourcev2;;
+import jus.poc.rw.v2.Resourcev2;
+import jus.poc.rw.v4.deadlock.Detector;
 
 /**
  * Main class for the Readers/Writers application. This class firstly creates a pool of read/write resources  
@@ -94,6 +95,14 @@ public class Simulator{
 		return policy;
 	}
 	
+	/**
+	 * Renvoie le String associe a la version
+	 * Il n'est pas necessaire de renvoyer un nouveau string base sur policy, comme il est static, il n'y a pas de risques de le modifier ailleurs 
+	 */
+	public static String getVersion(){
+		return version;
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static void main(String... args) throws Exception{
 		// set the application parameters
@@ -105,6 +114,9 @@ public class Simulator{
 		Observator obs = new Observator(null);
 		obs.init(nbReaders+nbWriters, nbResources);
 	
+		//Dectector créé pour la version 4
+		Detector det = new Detector(nbReaders+nbWriters,nbResources);
+		
 		int i;
 		
 		if (version.compareTo("v1")==0 || version.compareTo("v2")==0 || version.compareTo("v3")==0) {
@@ -112,7 +124,10 @@ public class Simulator{
 			rp = new ResourcePool(nbResources, null, obs, "jus.poc.rw."+version+".Resource"+version);		
 		}
 		else{
-			throw(new Exception("Erreur version"));
+			if(version.compareTo("v4")==0){
+				rp = new ResourcePool(nbResources, det, obs, "jus.poc.rw."+version+".Resource"+version);
+			}
+			else throw(new Exception("Erreur version"));
 		}
 
 		/**
@@ -146,8 +161,9 @@ public class Simulator{
 		/**
 		 * Simulation v1, fin lorsque les redacteurs s'arretent d'ecrire
 		 * Simulation v3, cas similaire a v1, on peut placer LOW_WRITE ou HIGH_WRITE dans le fichier xml en fonction de la politique voulue
+		 * Simulation v4, detection-guerison des interblocages
 		 */
-		if (version.compareTo("v1")==0 || version.compareTo("v3")==0) {
+		if (version.compareTo("v1")==0 || version.compareTo("v3")==0 || version.compareTo("v4")==0) {
 			// Boucle tant que les redacteurs n'ont pas fini
 			int nbRedFini=0;
 			while (nbRedFini != nbWriters) {
@@ -167,7 +183,6 @@ public class Simulator{
 				}
 			}
 		}
-		
 
 		/**
 		 * Simulation v2
