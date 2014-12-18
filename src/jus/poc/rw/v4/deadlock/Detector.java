@@ -2,7 +2,8 @@ package jus.poc.rw.v4.deadlock;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.LinkedList;
+import java.util.List;
 
 import jus.poc.rw.Actor;
 import jus.poc.rw.IResource;
@@ -11,15 +12,10 @@ import jus.poc.rw.deadlock.IDetector;
 
 public class Detector implements IDetector {
 
-	/**
-	 * mat[nbActors][nbResources]
-	 * mat[i][j] = 0 si l'actor i ne demande pas la resource j.
-	 * mat[i][j] = 1 si l'actor i attend la resource j.
-	 * mat[i][j] = 2 si l'actor i utilise la resource j.
-	 */
-	protected int mat[][];
-	protected int nbResources;
-	protected int nbActors;
+	//HashMap associant les ressources aux Actor qui l'utlisent. Les ressources sont représentées par leur id.
+	private HashMap<Integer, List<Actor>> hm = new HashMap<Integer, List<Actor>>();
+	//Tableau renvoyant l'id de la ressource que chaque acteur attend, -1 sinon.
+	private Integer[] actAtt;
 	
 	/**
 	 * Constructor
@@ -27,77 +23,78 @@ public class Detector implements IDetector {
 	 * @param nbResources
 	 */
 	public Detector(int nbActors, int nbResources) {
-		mat = new int[nbActors][nbResources];
-		this.nbActors=nbActors;
-		this.nbResources=nbResources;
+		int i;
+		for(i=0;i<nbResources;i++){
+			hm.put(i, new LinkedList<Actor>());
+		}
+		actAtt=new Integer[nbActors];
+		for(i=0;i<nbActors;i++){
+			actAtt[i]=-1;
+		}
 	}
 	
 	public synchronized void freeResource(Actor arg0, IResource arg1) {
-		mat[arg0.ident()][arg1.ident()] = 0;
+		hm.get(arg1.ident()).remove(arg0);
 	}
 
 	public synchronized void useResource(Actor arg0, IResource arg1) {
-		mat[arg0.ident()][arg1.ident()] = 2;
+		hm.get(arg1.ident()).add(arg0);
 	}
 
 	public synchronized void waitResource(Actor arg0, IResource arg1) throws DeadLockException {
-		mat[arg0.ident()][arg1.ident()] = 1;
+		actAtt[arg0.ident()]=arg1.ident();
 		startDetect(arg0,arg1);	
 	}
 	
-	public void startDetect(Actor arg0, IResource arg1) throws DeadLockException{
-				
-		//vector des actors utilisant et attendant au moins une ressource
-		Vector<Integer> actId = new Vector<Integer>();
+	private void startDetect(Actor arg0, IResource arg1) throws DeadLockException{
+		//On regarde la liste des acteurs accessibles depuis la ressource attendue par arg0
+		List<Actor> l=actAtteignable(actAtt[arg0.ident()]);
 		
-		for(int i=0; i<nbActors; i++) {
-			for(int j=0; j<nbResources; j++) {
-				if (mat[i][j]==2) { // l'actor i utilise la ressource j
-					boolean useAndWait=false;
-					int k=0;
-					while (!useAndWait && k<nbResources) {
-						if (mat[i][k]==1) {	// l'actor i attend la ressource k
-							if (!actId.contains(i)) {
-								actId.add(i);
-								useAndWait=true;
-							}
-						}
-						k++;
-					}
-				}
-			}
-		}
-		
-		Iterator<Integer> it = actId.iterator();
-		Iterator<Integer> it1;
-		//hm: ressources attendues par un actor de actId
-		//booleen associe: vrai si la ressource est utilisee par un actor de actId, faux sinon
-		HashMap<Integer, Boolean> hm = new HashMap<Integer, Boolean>();
-		while (it.hasNext()) {
-			int a=it.next();
-			for (int j=0; j<nbResources; j++) {
-				//si la ressource j est attendue par un actor de actId
-				if (mat[a][j]==1) {
-					it1 = actId.iterator();
-					while (it1.hasNext()) {
-						int i=it1.next();
-						//si la ressource j est utilisee par un actor de actId
-						if (mat[i][j]==2) {
-							hm.put(j, true);
-						}
-					}
-					//si la resource j attendue n'est pas utilisee, on met false
-					if (!hm.containsKey(j)) {
-						hm.put(j, false);
-						break;
-					}
-				}
-			}
-		}
-		
-		if (!hm.containsValue(false) && !hm.isEmpty()){
+		//Si arg0 est inclus dans l, il y a un cycle, et donc une DeadLockException doit etre lancee
+		if (l.contains(arg0)){
 			System.out.println("\nDeadlock\n");
 			throw (new DeadLockException(arg0,arg1));
 		}
+	}
+	
+	private List<Actor> actAtteignable(Integer idR){
+		//Liste des elements accessibles depuis idR
+		List<Actor> res=new LinkedList<Actor>(hm.get(idR));
+		//cpy permet de parcourir la liste des elements et ajouter les elements necessaires dans res
+		List<Actor> cpy=null;
+		Iterator<Actor> it;
+		Iterator<Actor> itBis;
+		Actor elt;
+		Actor ajtPossible;
+		//Permet de ne pas traiter les premiers elements de la liste deja analyses
+		int skipList=0;
+		int i;
+		//Tant qu'on a ajoute des elements dans la liste resultat, on continue
+		while(!res.equals(cpy)){
+			cpy=new LinkedList<Actor>(res);
+			it=cpy.iterator();
+			for(i=0;i<skipList;i++){
+				it.next();
+			}
+			skipList=0;
+			//Tant qu'il reste des elements dans cpy, on regarde quels sont les actors associes aux ressources qu'ils attendent
+			while (it.hasNext()){
+				skipList++;
+				elt=it.next();
+				int idRlocal=actAtt[elt.ident()];
+				//Si l'actor attend une ressource
+				if(idRlocal!=-1){
+					itBis=hm.get(idRlocal).iterator();
+					//On parcourt la liste des actors accessibles depuis la ressource attendue par l'element de res vise
+					while(itBis.hasNext()){
+						ajtPossible=itBis.next();
+						if(!res.contains(ajtPossible)){
+							res.add(ajtPossible);
+						}
+					}
+				}
+			}
+		}
+		return res;
 	}
 }

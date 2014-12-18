@@ -32,7 +32,7 @@ public class Resourcev4 extends Resource {
 	 * Actor arg0 starts reading
 	 */
 	public void beginR(Actor arg0) throws InterruptedException, DeadLockException {
-		System.out.println("Le lecteur " +arg0.ident()+ " attend la ressource " +this.ident());
+		//System.out.println("Le lecteur " +arg0.ident()+ " attend la ressource " +this.ident());
 		detector.waitResource(arg0, this);
 		
 		mutex.acquire();
@@ -53,7 +53,7 @@ public class Resourcev4 extends Resource {
 	 * Actor arg0 starts writing
 	 */
 	public void beginW(Actor arg0) throws InterruptedException, DeadLockException {
-		System.out.println("Le redacteur " +arg0.ident()+ " attend la ressource " +this.ident());
+		//System.out.println("Le redacteur " +arg0.ident()+ " attend la ressource " +this.ident());
 		detector.waitResource(arg0, this);
 			
 		res.acquire();
