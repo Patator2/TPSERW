@@ -17,54 +17,56 @@ public class Resourcev2 extends Resource {
 
 		/**
 		 * Constructor
-		 * @param IDetector act
+		 * @param IDetector arg0
 		 * @param IObservator obs
 		 */
-		public Resourcev2(IDetector act, IObservator obs) {
-			super(act, obs);
+		public Resourcev2(IDetector arg0, IObservator obs) {
+			super(arg0, obs);
 		}
 
 		/**
-		 * Actor act starts reading
+		 * Actor arg0 starts reading
 		 */
-		public synchronized void beginR(Actor act) throws InterruptedException, DeadLockException {
+		public synchronized void beginR(Actor arg0) throws InterruptedException, DeadLockException {
 			while (nbW>0) { wait(); }
 			nbR++;
 			nbLect--;
-			System.out.println("Le lecteur " +act.ident()+ " lit la ressource " +this.ident());
-			super.observator.acquireResource(act, this);
+			System.out.println("Le lecteur " +arg0.ident()+ " lit la ressource " +this.ident());
+			super.observator.acquireResource(arg0, this);
 		}
 
 		/**
-		 * Actor act starts writing
+		 * Actor arg0 starts writing
 		 */
-		public synchronized void beginW(Actor act) throws InterruptedException, DeadLockException {
+		public synchronized void beginW(Actor arg0) throws InterruptedException, DeadLockException {
 			while (nbR>0 || nbW>0 || nbLect>0) { wait(); }
 			nbW++;
-			System.out.println("Le redacteur " +act.ident()+ " ecrit dans la ressource " +this.ident());
-			super.observator.acquireResource(act, this);
+			System.out.println("Le redacteur " +arg0.ident()+ " ecrit dans la ressource " +this.ident());
+			super.observator.acquireResource(arg0, this);
 		}
 
 		/**
-		 * Actor act stops reading
+		 * Actor arg0 stops reading
 		 */
-		public synchronized void endR(Actor act) throws InterruptedException {
+		public synchronized void endR(Actor arg0) throws InterruptedException {
 			nbR--;
-			System.out.println("Le lecteur " +act.ident()+ " arrete de lire la ressource " +this.ident());
+			System.out.println("Le lecteur " +arg0.ident()+ " arrete de lire la ressource " +this.ident());
+			super.observator.releaseResource(arg0, this);
 			notifyAll();
 		}
 
 		/**
-		 * Actor act stops writing
+		 * Actor arg0 stops writing
 		 */
-		public synchronized void endW(Actor act) throws InterruptedException {
+		public synchronized void endW(Actor arg0) throws InterruptedException {
 			nbW--;
 			nbLect = Simulator.NB_READERS;
-			System.out.println("Le redacteur " +act.ident()+ " arrete d'ecrire dans la ressource " +this.ident());
+			System.out.println("Le redacteur " +arg0.ident()+ " arrete d'ecrire dans la ressource " +this.ident());
+			super.observator.releaseResource(arg0, this);
 			notifyAll();
 		}
 
-		public void init(Object act) throws UnsupportedOperationException {
+		public void init(Object arg0) throws UnsupportedOperationException {
 			throw new UnsupportedOperationException("Methode impossible pour le moment");
 		}
 		

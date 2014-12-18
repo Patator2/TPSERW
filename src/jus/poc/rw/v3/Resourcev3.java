@@ -10,11 +10,13 @@ import jus.poc.rw.deadlock.IDetector;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Resourcev3 extends Resource {
 	
 	protected Lock l=new ReentrantLock();
-	protected final Condition cR=l.newCondition();
+	protected final Condition c=l.newCondition();
+	protected ReentrantReadWriteLock rrwl = new ReentrantReadWriteLock();
 	//Nombre de redacteurs en attente
 	protected int nbWAtt=0;
 			
@@ -28,46 +30,54 @@ public class Resourcev3 extends Resource {
 	}
 
 	/**
-	 * L'Actor act commence a lire
+	 * L'Actor arg0 commence a lire
 	 */
-	public void beginR(Actor act) throws InterruptedException, DeadLockException {
-		 l.lock();
-		 while (Simulator.getPolicy().compareTo("HIGH_WRITE")==0 && nbWAtt>0){
-		       cR.await();
-		 }
-		 System.out.println("Le lecteur " +act.ident()+ " lit la ressource " +this.ident());
-		 super.observator.acquireResource(act, this);
+	public void beginR(Actor arg0) throws InterruptedException, DeadLockException {
+		if(Simulator.getPolicy().compareTo("HIGH_WRITE")==0){	
+			l.lock();
+			while (nbWAtt>0){
+		       c.await();
+			}
+			l.unlock();
+		}
+		rrwl.readLock().lock();
+		System.out.println("Le lecteur " +arg0.ident()+ " lit la ressource " +this.ident());
+		super.observator.acquireResource(arg0, this);
 	}
 
 	/**
-	 * L'Actor act commence a ecrire
+	 * L'Actor arg0 commence a ecrire
 	 */
-	public void beginW(Actor act) throws InterruptedException, DeadLockException {
+	public void beginW(Actor arg0) throws InterruptedException, DeadLockException {
 		nbWAtt++;
-		l.lock();
+		rrwl.writeLock().lock();
+		System.out.println("Le redacteur " +arg0.ident()+ " ecrit dans la ressource " +this.ident());
+		super.observator.acquireResource(arg0, this);
+	}
+
+	/**
+	 * L'Actor arg0 s'arrete de lire
+	 */
+	public void endR(Actor arg0) throws InterruptedException {
+		rrwl.readLock().unlock();
+		System.out.println("Le lecteur " +arg0.ident()+ " arrete de lire la ressource " +this.ident());
+		super.observator.releaseResource(arg0, this);
+	}
+
+	/**
+	 * L'Actor arg0 s'arrete d'ecrire
+	 */
+	public void endW(Actor arg0) throws InterruptedException {
 		nbWAtt--;
-		System.out.println("Le redacteur " +act.ident()+ " ecrit dans la ressource " +this.ident());
-		super.observator.acquireResource(act, this);
-	}
-
-	/**
-	 * L'Actor act s'arrete de lire
-	 */
-	public void endR(Actor act) throws InterruptedException {
+		l.lock();
+		c.signalAll();
 		l.unlock();
-		System.out.println("Le lecteur " +act.ident()+ " arrete de lire la ressource " +this.ident());
+		rrwl.writeLock().unlock();
+		System.out.println("Le redacteur " +arg0.ident()+ " arrete d'ecrire dans la ressource " +this.ident());
+		super.observator.releaseResource(arg0, this);
 	}
 
-	/**
-	 * L'Actor act s'arrete d'ecrire
-	 */
-	public void endW(Actor act) throws InterruptedException {
-		cR.signal();
-		l.unlock();
-		System.out.println("Le redacteur " +act.ident()+ " arrete d'ecrire dans la ressource " +this.ident());
-	}
-
-	public void init(Object act) throws UnsupportedOperationException {
+	public void init(Object arg0) throws UnsupportedOperationException {
 		throw new UnsupportedOperationException("Methode impossible pour le moment");
 	}
 

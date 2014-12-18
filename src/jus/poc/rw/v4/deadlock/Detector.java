@@ -12,12 +12,12 @@ import jus.poc.rw.deadlock.IDetector;
 public class Detector implements IDetector {
 
 	/**
-	 * matrice[nbActors][nbResources]
-	 * matrice[i][j] = 0 si l'actor i ne demande pas la resource j.
-	 * matrice[i][j] = 1 si l'actor i attend la resource j.
-	 * matrice[i][j] = 2 si l'actor i utilise la resource j.
+	 * mat[nbActors][nbResources]
+	 * mat[i][j] = 0 si l'actor i ne demande pas la resource j.
+	 * mat[i][j] = 1 si l'actor i attend la resource j.
+	 * mat[i][j] = 2 si l'actor i utilise la resource j.
 	 */
-	protected int matrice[][];
+	protected int mat[][];
 	protected int nbResources;
 	protected int nbActors;
 	
@@ -27,39 +27,39 @@ public class Detector implements IDetector {
 	 * @param nbResources
 	 */
 	public Detector(int nbActors, int nbResources) {
-		matrice = new int[nbActors][nbResources];
+		mat = new int[nbActors][nbResources];
 		this.nbActors=nbActors;
 		this.nbResources=nbResources;
 	}
 	
 	public synchronized void freeResource(Actor arg0, IResource arg1) {
-		matrice[arg0.ident()][arg1.ident()] = 0;
+		mat[arg0.ident()][arg1.ident()] = 0;
 	}
 
 	public synchronized void useResource(Actor arg0, IResource arg1) {
-		matrice[arg0.ident()][arg1.ident()] = 2;
+		mat[arg0.ident()][arg1.ident()] = 2;
 	}
 
 	public synchronized void waitResource(Actor arg0, IResource arg1) throws DeadLockException {
-		matrice[arg0.ident()][arg1.ident()] = 1;
+		mat[arg0.ident()][arg1.ident()] = 1;
 		startDetect(arg0,arg1);	
 	}
 	
 	public void startDetect(Actor arg0, IResource arg1) throws DeadLockException{
 				
-		//contient les actors utilisant ET attendant au moins une resource
-		Vector<Integer> actorIdents = new Vector<Integer>();
+		//vector des actors utilisant et attendant au moins une ressource
+		Vector<Integer> actId = new Vector<Integer>();
 		
 		for(int i=0; i<nbActors; i++) {
 			for(int j=0; j<nbResources; j++) {
-				if (matrice[i][j]==2) { // si l'actor i utilise la resource j
-					boolean trouveActorQuiUtiliseEtAttend=false;
+				if (mat[i][j]==2) { // l'actor i utilise la ressource j
+					boolean useAndWait=false;
 					int k=0;
-					while (!trouveActorQuiUtiliseEtAttend && k<nbResources) {
-						if (matrice[i][k]==1) {	// si l'actor i attend la resource k
-							if (!actorIdents.contains(i)) {
-								actorIdents.add(i);
-								trouveActorQuiUtiliseEtAttend=true;
+					while (!useAndWait && k<nbResources) {
+						if (mat[i][k]==1) {	// l'actor i attend la ressource k
+							if (!actId.contains(i)) {
+								actId.add(i);
+								useAndWait=true;
 							}
 						}
 						k++;
@@ -68,33 +68,35 @@ public class Detector implements IDetector {
 			}
 		}
 		
-		Iterator<Integer> it = actorIdents.iterator();
-		//hm contient chaque resource attendue par un actor du Vector
-		//et on lui associe un booleen qui permet de savoir si
-		//la resource attendue est utilisee par un actor du Vector
+		Iterator<Integer> it = actId.iterator();
+		Iterator<Integer> it1;
+		//hm: ressources attendues par un actor de actId
+		//booleen associe: vrai si la ressource est utilisee par un actor de actId, faux sinon
 		HashMap<Integer, Boolean> hm = new HashMap<Integer, Boolean>();
 		while (it.hasNext()) {
 			int a=it.next();
 			for (int j=0; j<nbResources; j++) {
-				//si la resource est attendue par un actor du Vector
-				if (matrice[a][j]==1) {
-					Iterator<Integer> it1 = actorIdents.iterator();
+				//si la ressource j est attendue par un actor de actId
+				if (mat[a][j]==1) {
+					it1 = actId.iterator();
 					while (it1.hasNext()) {
 						int i=it1.next();
-						//si la resource attendue par un actor du Vector est
-						//utilisee par un actor du Vector
-						if (matrice[i][j]==2) {
+						//si la ressource j est utilisee par un actor de actId
+						if (mat[i][j]==2) {
 							hm.put(j, true);
 						}
 					}
-					//si la resource attendue n'est pas utilisee, on met false
-					if (!hm.containsKey(j)) { hm.put(j, false); }
+					//si la resource j attendue n'est pas utilisee, on met false
+					if (!hm.containsKey(j)) {
+						hm.put(j, false);
+						break;
+					}
 				}
 			}
 		}
 		
 		if (!hm.containsValue(false) && !hm.isEmpty()){
-			System.out.println("\nProblem : DeadLock !\n");
+			System.out.println("\nDeadlock\n");
 			throw (new DeadLockException(arg0,arg1));
 		}
 	}

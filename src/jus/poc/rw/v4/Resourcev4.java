@@ -10,14 +10,14 @@ import jus.poc.rw.deadlock.IDetector;
 
 public class Resourcev4 extends Resource {
 
-	// Nombre de Readers en cours
-	protected int nbR;
-	// Nombre de Writers en cours
-	protected int nbW;
+	// Nombre de lecteurs en cours
+	protected int nbR=0;
+	// Nombre de redacteurs en cours
+	protected int nbW=0;
 	
-	protected Semaphore mutex;
+	protected Semaphore mutex=new Semaphore(1);
 	
-	protected Semaphore res;
+	protected Semaphore res=new Semaphore(1);
 	
 	/**
 	 * Constructor
@@ -26,29 +26,23 @@ public class Resourcev4 extends Resource {
 	 */
 	public Resourcev4(IDetector arg0, IObservator arg1) {
 		super(arg0, arg1);
-		nbR = 0;
-		nbW = 0;
-		mutex = new Semaphore(1);
-		res = new Semaphore(1);
 	}
 
 	/**
 	 * Actor arg0 starts reading
 	 */
 	public void beginR(Actor arg0) throws InterruptedException, DeadLockException {
-		//System.out.println("Reader " +arg0.ident()+ " waits for resource " +this.ident());
+		System.out.println("Le lecteur " +arg0.ident()+ " attend la ressource " +this.ident());
 		detector.waitResource(arg0, this);
 		
 		mutex.acquire();
 		
 		if (nbR==0){
-			mutex.release();
 			res.acquire();
-			mutex.acquire();
 		}
 
 		nbR++;
-		System.out.println("Reader " +arg0.ident()+ " reads resource " +this.ident());
+		System.out.println("Le lecteur " +arg0.ident()+ " lit la ressource " +this.ident());
 		observator.acquireResource(arg0, this);
 		detector.useResource(arg0, this);
 
@@ -59,12 +53,12 @@ public class Resourcev4 extends Resource {
 	 * Actor arg0 starts writing
 	 */
 	public void beginW(Actor arg0) throws InterruptedException, DeadLockException {
-		//System.out.println("Writer " +arg0.ident()+ " waits for resource " +this.ident());
+		System.out.println("Le redacteur " +arg0.ident()+ " attend la ressource " +this.ident());
 		detector.waitResource(arg0, this);
 			
 		res.acquire();
 
-		System.out.println("Writer " +arg0.ident()+ " writes resource " +this.ident());
+		System.out.println("Le redacteur " +arg0.ident()+ " ecrit dans la ressource " +this.ident());
 		observator.acquireResource(arg0, this);
 		detector.useResource(arg0, this);
 	}
@@ -76,7 +70,8 @@ public class Resourcev4 extends Resource {
 		mutex.acquire();
 		
 		nbR--;
-		System.out.println("Reader " +arg0.ident()+ " releases resource " +this.ident());
+		System.out.println("Le lecteur " +arg0.ident()+ " arrete de lire la ressource " +this.ident());
+		observator.releaseResource(arg0, this);
 		detector.freeResource(arg0, this);
 
 		if (nbR==0){
@@ -90,14 +85,15 @@ public class Resourcev4 extends Resource {
 	 * Actor arg0 stops writing
 	 */
 	public void endW(Actor arg0) throws InterruptedException {
-		System.out.println("Writer " +arg0.ident()+ " releases resource " +this.ident());
+		System.out.println("Le redacteur " +arg0.ident()+ " arrete d'ecrire dans la ressource " +this.ident());
+		observator.releaseResource(arg0, this);
 		detector.freeResource(arg0, this);
 
 		res.release();
 	}
 
 	public void init(Object arg0) throws UnsupportedOperationException {
-		throw new UnsupportedOperationException("Not supported yet.");
+		throw new UnsupportedOperationException("Methode impossible pour le moment");
 	}
 
 }

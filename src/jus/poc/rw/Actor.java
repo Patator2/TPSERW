@@ -78,7 +78,7 @@ public abstract class Actor extends Thread{
 			try {
 				this.acquire(resources[i]);
 				if (Simulator.getVersion().compareTo("v4")==0) {
-					sleep(2000);
+					sleep(4000);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
