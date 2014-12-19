@@ -48,18 +48,19 @@ public class Detector implements IDetector {
 	}
 	
 	private void startDetect(Actor arg0, IResource arg1) throws DeadLockException{
-		//On regarde la liste des acteurs accessibles depuis la ressource attendue par arg0
-		List<Actor> l=actAtteignable(actAtt[arg0.ident()]);
+		//On regarde si arg0 est accessible depuis la ressource attendue par arg0
+		boolean b=actAtteignable(arg0,arg1);
 		
-		//Si arg0 est inclus dans l, il y a un cycle, et donc une DeadLockException doit etre lancee
-		if (l.contains(arg0)){
+		//Si arg0 est accessible depuis arg1, il y a un cycle, et donc une DeadLockException doit etre lancee
+		if (b){
 			throw (new DeadLockException(arg0,arg1));
 		}
 	}
 	
-	private List<Actor> actAtteignable(IResource Res){
-		//Liste des elements accessibles depuis Res
-		List<Actor> res=new LinkedList<Actor>(resUsed[Res.ident()]);
+	//Renvoie vrai si arg0 est atteignable, faux sinon
+	private boolean actAtteignable(Actor arg0, IResource arg1){
+		//Liste des elements accessibles depuis arg1
+		List<Actor> res=new LinkedList<Actor>(resUsed[arg1.ident()]);
 		//cpy permet de parcourir la liste des elements et ajouter les elements necessaires dans res
 		List<Actor> cpy=null;
 		Iterator<Actor> it;
@@ -90,11 +91,15 @@ public class Detector implements IDetector {
 						ajtPossible=itBis.next();
 						if(!res.contains(ajtPossible)){
 							res.add(ajtPossible);
+							if(ajtPossible==arg0){
+								//Si l'element vise est arg0, on arrete l'execution et on renvoie vrai
+								return true;
+							}
 						}
 					}
 				}
 			}
 		}
-		return res;
+		return false;
 	}
 }
