@@ -84,7 +84,9 @@ public abstract class Actor extends Thread{
 				e.printStackTrace();
 			}
 			catch (DeadLockException e) {
-					restart(resources[i]);
+				System.out.println("\nDeadlock\n");
+				//Le fait de recevoir une deadlock exception debloque automatiquement la situation
+				//restart(resources[i]);
 			} 
 		}
 	}
@@ -102,15 +104,20 @@ public abstract class Actor extends Thread{
 			}
 		}
 	}
+	
 	/**
 	 * Restart the actor at the start of his execution, having returned all the resources acquired.
 	 * @param resource the resource at the origin of the deadlock.
 	 */
 	protected void restart(IResource resource) {
-		this.observator.restartActor(this, resource);
+		int i;
+		for(i=0;i<resources.length;i++){
+			this.observator.restartActor(this, resources[i]);
+		}
 		this.release();
 		this.run();
 	}
+
 	/**
 	 * acquisition proceeding specific to the type of actor.
 	 * @param resource the required resource

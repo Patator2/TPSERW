@@ -12,8 +12,6 @@ public class Resourcev4 extends Resource {
 
 	// Nombre de lecteurs en cours
 	protected int nbR=0;
-	// Nombre de redacteurs en cours
-	protected int nbW=0;
 	
 	protected Semaphore mutex=new Semaphore(1);
 	

@@ -1,6 +1,5 @@
 package jus.poc.rw.v4.deadlock;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,37 +11,39 @@ import jus.poc.rw.deadlock.IDetector;
 
 public class Detector implements IDetector {
 
-	//HashMap associant les ressources aux Actor qui l'utlisent. Les ressources sont représentées par leur id.
-	private HashMap<Integer, List<Actor>> hm = new HashMap<Integer, List<Actor>>();
-	//Tableau renvoyant l'id de la ressource que chaque acteur attend, -1 sinon.
-	private Integer[] actAtt;
+	//Tableau associant les ressources aux Actor qui l'utlisent. Les ressources sont représentées par leur id.
+	private List<Actor>[] resUsed;
+	//Tableau renvoyant la ressource que chaque acteur attend, null sinon.
+	private IResource[] actAtt;
 	
 	/**
 	 * Constructor
 	 * @param nbActors
 	 * @param nbResources
 	 */
+	//Les elements du tableau sont organises pour etre des List<Actor>, on ignore donc le message d'avertissement
+	@SuppressWarnings("unchecked")
 	public Detector(int nbActors, int nbResources) {
 		int i;
+		resUsed=new List[nbResources];
 		for(i=0;i<nbResources;i++){
-			hm.put(i, new LinkedList<Actor>());
+			resUsed[i]=new LinkedList<Actor>();
 		}
-		actAtt=new Integer[nbActors];
-		for(i=0;i<nbActors;i++){
-			actAtt[i]=-1;
-		}
+		actAtt=new IResource[nbActors];
 	}
 	
 	public synchronized void freeResource(Actor arg0, IResource arg1) {
-		hm.get(arg1.ident()).remove(arg0);
+		resUsed[arg1.ident()].remove(arg0);
 	}
 
 	public synchronized void useResource(Actor arg0, IResource arg1) {
-		hm.get(arg1.ident()).add(arg0);
+		resUsed[arg1.ident()].add(arg0);
+		//La ressource utilisee n'est plus attendue
+		actAtt[arg0.ident()]=null;
 	}
 
 	public synchronized void waitResource(Actor arg0, IResource arg1) throws DeadLockException {
-		actAtt[arg0.ident()]=arg1.ident();
+		actAtt[arg0.ident()]=arg1;
 		startDetect(arg0,arg1);	
 	}
 	
@@ -52,14 +53,13 @@ public class Detector implements IDetector {
 		
 		//Si arg0 est inclus dans l, il y a un cycle, et donc une DeadLockException doit etre lancee
 		if (l.contains(arg0)){
-			System.out.println("\nDeadlock\n");
 			throw (new DeadLockException(arg0,arg1));
 		}
 	}
 	
-	private List<Actor> actAtteignable(Integer idR){
-		//Liste des elements accessibles depuis idR
-		List<Actor> res=new LinkedList<Actor>(hm.get(idR));
+	private List<Actor> actAtteignable(IResource Res){
+		//Liste des elements accessibles depuis Res
+		List<Actor> res=new LinkedList<Actor>(resUsed[Res.ident()]);
 		//cpy permet de parcourir la liste des elements et ajouter les elements necessaires dans res
 		List<Actor> cpy=null;
 		Iterator<Actor> it;
@@ -81,10 +81,10 @@ public class Detector implements IDetector {
 			while (it.hasNext()){
 				skipList++;
 				elt=it.next();
-				int idRlocal=actAtt[elt.ident()];
+				IResource resLocal=actAtt[elt.ident()];
 				//Si l'actor attend une ressource
-				if(idRlocal!=-1){
-					itBis=hm.get(idRlocal).iterator();
+				if(resLocal!=null){
+					itBis=resUsed[resLocal.ident()].iterator();
 					//On parcourt la liste des actors accessibles depuis la ressource attendue par l'element de res vise
 					while(itBis.hasNext()){
 						ajtPossible=itBis.next();
