@@ -35,7 +35,6 @@ public class Writer extends Actor {
 	 */
 	protected void release(IResource resource) throws InterruptedException {
 		resource.endW(this);
-		super.observator.releaseResource(this, resource);
 	}
 
 }

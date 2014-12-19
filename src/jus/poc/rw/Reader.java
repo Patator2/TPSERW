@@ -35,7 +35,6 @@ public class Reader extends Actor {
 	 */
 	protected void release(IResource resource) throws InterruptedException {
 		resource.endR(this);
-		super.observator.releaseResource(this, resource);
 	}
 
 }

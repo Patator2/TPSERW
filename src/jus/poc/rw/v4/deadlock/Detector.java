@@ -44,10 +44,10 @@ public class Detector implements IDetector {
 
 	public synchronized void waitResource(Actor arg0, IResource arg1) throws DeadLockException {
 		actAtt[arg0.ident()]=arg1;
-		startDetect(arg0,arg1);	
+		detectDeadlock(arg0,arg1);	
 	}
 	
-	private void startDetect(Actor arg0, IResource arg1) throws DeadLockException{
+	private void detectDeadlock(Actor arg0, IResource arg1) throws DeadLockException{
 		//On regarde si arg0 est accessible depuis la ressource attendue par arg0
 		boolean b=actAtteignable(arg0,arg1);
 		

@@ -1,7 +1,6 @@
 package jus.poc.rw;
 
 import jus.poc.rw.control.Observator;
-import jus.poc.rw.v2.Resourcev2;
 import jus.poc.rw.v4.deadlock.Detector;
 
 /**
@@ -156,70 +155,29 @@ public class Simulator{
 			actors[i].start();
 		}
 
-		System.out.println("Simulation "+version+"\n");
-		
 		/**
 		 * Simulation v1, fin lorsque les redacteurs s'arretent d'ecrire
+		 * Simulation v2, un nombre minimum de lectures doit etre effectue entre chaque ecriture
 		 * Simulation v3, cas similaire a v1, on peut placer LOW_WRITE ou HIGH_WRITE dans le fichier xml en fonction de la politique voulue
 		 * Simulation v4, detection-guerison des interblocages
 		 */
-		if (version.compareTo("v1")==0 || version.compareTo("v3")==0 || version.compareTo("v4")==0) {
-			// Boucle tant que les redacteurs n'ont pas fini
-			int nbRedFini=0;
-			while (nbRedFini != nbWriters) {
-				nbRedFini=0;
-				for (i=0; i<actors.length; i++) {
-					if ((actors[i].getClass().getSimpleName().compareTo("Writer")==0) && (!actors[i].isAlive())) {
-						nbRedFini++;
-					}
-				}
-			}
-			// Arrete les lecteurs
-			System.out.println("Les ecrivains ont fini, on arrete les lecteurs suivants:");
+		System.out.println("Simulation "+version+"\n");
+		// Boucle tant que les redacteurs n'ont pas fini
+		int nbRedFini=0;
+		while (nbRedFini != nbWriters) {
+			nbRedFini=0;
 			for (i=0; i<actors.length; i++) {
-				if (actors[i].getClass().getSimpleName().compareTo("Reader")==0) {
-					actors[i].stop();
-					System.out.println("\n" +actors[i].ident());
+				if ((actors[i].getClass().getSimpleName().compareTo("Writer")==0) && (!actors[i].isAlive())) {
+					nbRedFini++;
 				}
 			}
 		}
-
-		/**
-		 * Simulation v2
-		 * Fin de la simulation quand les redacteurs s'arretent
-		 * et qu'un nombre minimum de lectures ait suivi chaque ecriture 
-		 */
-		if (version.compareTo("v2")==0) {
-			// Boucle tant que les redacteurs n'ont pas fini d'ecrire
-			int nbRedFini=0;
-			while (nbRedFini != nbWriters) {
-				nbRedFini=0;
-				for (i=0; i<actors.length; i++) {
-					if ((actors[i].getClass().getSimpleName().compareTo("Writer")==0) && (!actors[i].isAlive())) {
-						nbRedFini++;
-					}
-				}
-			}
-			
-			// Boucle tant qu'un nombre minimum de lectures n'a ete effectue sur une resource apres ecriture
-			int nbRessourcesLues=0; // nombres de resources avec le bon de lectures apres ecriture
-			while (nbRessourcesLues<nbResources) {
-				IResource[] ir = rp.selection(nbResources);
-				nbRessourcesLues=0;
-				for (i=0; i<nbResources; i++) {
-					if (((Resourcev2)ir[i]).getnbLect() >= NB_READERS) {
-						nbRessourcesLues++;
-					}
-				}
-			}
-			
-			// Arrete les Threads Reader (les Writers ont fini d'ecrire
-			// et qu'un nombre minimum de lectures ait suivi chaque ecriture ) 
-			for (i=0; i<actors.length; i++) {
-				if (actors[i].getClass().getSimpleName().compareTo("Reader")==0) {
-					actors[i].stop();
-					System.out.println("Les ecrivains ont fini, on arrete les lecteurs suivants:" +actors[i].ident());
-				}
+		// Arrete les lecteurs. En effet, ceux-ci ne s'arretent jamais naturellement dans la configuration actuelle.
+		System.out.println("Les ecrivains ont fini, on arrete les lecteurs suivants:");
+		for (i=0; i<actors.length; i++) {
+			if (actors[i].getClass().getSimpleName().compareTo("Reader")==0) {
+				actors[i].stop();
+				System.out.println(actors[i].ident());
 			}
 		}
 	}

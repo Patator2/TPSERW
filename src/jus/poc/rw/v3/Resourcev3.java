@@ -69,9 +69,11 @@ public class Resourcev3 extends Resource {
 	 */
 	public void endW(Actor arg0) throws InterruptedException {
 		nbWAtt--;
-		l.lock();
-		c.signalAll();
-		l.unlock();
+		if(Simulator.getPolicy().compareTo("HIGH_WRITE")==0){	
+			l.lock();
+			c.signalAll();
+			l.unlock();
+		}
 		rrwl.writeLock().unlock();
 		System.out.println("Le redacteur " +arg0.ident()+ " arrete d'ecrire dans la ressource " +this.ident());
 		super.observator.releaseResource(arg0, this);
